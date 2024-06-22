@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单管理系统</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            padding-top: 60px;
+            background-color: #f6f6f8;
+
+        }
+        .dashboard {
+            margin: 20px;
+        }
+
+        .card {
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+        #form_content {
+            border: 2px solid #007bff;
+            padding: 20px;
+            border-radius: 10px;
+            transition: box-shadow 0.3s ease-in-out;
+            display: none;
+            width: 40%;
+            position: absolute;
+            left: 25%;
+            top: 15%;
+            opacity: 1;
+            background-color: rgba(221,221,218,0.9);
+            z-index: 2;
+
+        }
+
+
+        #form_content:hover {
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+        }
+
+        #dynamicForm .form-group {
+            margin-bottom: 15px;
+        }
+
+        #dynamicForm label {
+            font-weight: bold;
+        }
+
+        #dynamicForm input,
+        #dynamicForm select {
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        #dynamicForm input:focus,
+        #dynamicForm select:focus {
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+        }
+
+        #closeButton, #submitButton {
+            padding: 8px 15px;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+
+        #closeButton:hover, #submitButton:hover {
+            background-color: #007bff;
+            color: #fff;
+
+        }
+        #row{
+
+        }
+        #nav_col{
+            position: fixed;
+            font-size: 15px;
+            font-family: "Arial Narrow";
+            border: rgba(221,217,209,0.53) 1px;
+        }
+
+
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href="#">订单管理系统</a>
+    <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+            <a class="nav-link" href="#" id="loginInfo">登录信息</a>
+        </li>
+    </ul>
+</nav>
+<div class="container mt-5" id="form_content">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 id="formTitle">表单标题</h2>
+        <button type="button" class="btn btn-outline-secondary rounded-circle" id="closeButton" style="display: none;">×</button>
+    </div>
+
+    <form id="dynamicForm">
+        <button type="submit" class="btn btn-primary rounded-pill px-4 py-2" id="submitButton">提交</button>
+
+    </form>
+</div>
+<div class="container-fluid" style="margin-top: 50px">
+    <div class="row">
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar" id="nav_col">
+            <div class="sidebar-sticky">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="load_dashboard()">仪表板</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadContent('users')">负责人管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadContent('products')">产品管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadContent('orders')">订单管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadContent('tasks')">任务管理</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+            <div id="tableContainer"></div>
+
+
+            <div class="container dashboard" id="dashboard">
+                <div class="row" id="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">负责人数量</h5>
+                                <p class="card-text" id="user_count">8</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">产品数量</h5>
+                                <p class="card-text" id="product_count">11</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">订单数量</h5>
+                                <p class="card-text">已完成: <span id="completedOrdersCount"></span></p>
+                                <p class="card-text">未完成: <span id="incompleteOrdersCount"></span></p>
+                                <canvas id="ordersChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">任务数量</h5>
+                                <p class="card-text">已完成: <span id="completedTasksCount"></span></p>
+                                <p class="card-text">未完成: <span id="incompleteTasksCount"></span></p>
+                                <canvas id="tasksChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </main>
+    </div>
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+<script>
+    load_dashboard()
+    function getCookieValue(cookieName) {
+        const cookies = document.cookie.split('; ');
+        for (const cookie of cookies) {
+            const [name, value] = cookie.split('=');
+            if (name === cookieName) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+
+    const username = getCookieValue("username");
+    document.getElementById('loginInfo').innerHTML = `
+            <p class="mb-0 small">欢迎</p>
+            <p class="mb-0 text-primary rounded-circle">${username}</p>
+        </div>`;
+
+
+
+    function populateTable(data, headers, actions, title) {
+        const tableContainer = document.getElementById('tableContainer');
+        tableContainer.innerHTML = '';
+
+        const table = document.createElement('table');
+        table.classList.add('table', 'table-bordered', 'table-striped');
+
+
+
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        headers.forEach(header => {
+            const th = document.createElement('th');
+            th.textContent = header;
+            headerRow.appendChild(th);
+        });
+
+        const actionsHeader = document.createElement('th');
+        actionsHeader.textContent = 'Actions';
+        headerRow.appendChild(actionsHeader);
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+
+        const tbody = document.createElement('tbody');
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            headers.forEach(header => {
+                const td = document.createElement('td');
+                td.textContent = item[header.toLowerCase()];
+                row.appendChild(td);
+            });
+
+
+            const actionCell = document.createElement('td');
+            actions.forEach(action => {
+                const button = document.createElement('button');
+                button.classList.add('btn', 'btn-sm', action.class);
+                button.textContent = action.label;
+                console.log(item)
+                if (title == "用户管理") {
+                    console.log(title)
+                    button.onclick = () => action.onClick(item.manager_id);
+                }
+                if (title == "产品管理") {
+                    button.onclick = () => action.onClick(item.product_id);
+                    console.log(title)
+                }
+                if (title == "订单管理") {
+                    console.log(title)
+                    button.onclick = () => action.onClick(item.order_id);
+                }
+                if(title=="任务管理") {
+                    button.onclick = () => action.onClick(item.id);
+                }
+
+
+                actionCell.appendChild(button);
+            });
+            row.appendChild(actionCell);
+
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        const titleElement = document.createElement('h2');
+        titleElement.textContent = title;
+        tableContainer.appendChild(titleElement);
+
+        tableContainer.appendChild(table);
+    }
+
+    function loadContent(page) {
+        document.getElementById('form_content').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('tableContainer').style.display = 'block';
+        switch (page) {
+            case 'users':
+
+                get_type_ajax('managers', 'search', {page:1}, function (userdatas) {
+                    populateTable(userdatas['result'], ['Manager_ID', 'Name', 'Phone'], [
+                        { label: 'Edit', class: 'btn-warning', onClick: editUser },
+                        { label: 'Delete', class: 'btn-danger', onClick: deleteUser },
+                        { label: 'Add', class: 'btn-success', onClick: addUser },
+                    ], '用户管理');
+                });
+
+                break;
+            case 'products':
+              get_type_ajax("products",'search',{page:1},function (product_data) {
+                    populateTable(product_data['result'], ['Product_ID', 'Product_Name', 'Price',"quantity"], [
+                        { label: 'Edit', class: 'btn-warning', onClick: editProduct },
+                        { label: 'Delete', class: 'btn-danger', onClick: deleteProduct },
+                        { label: 'Add', class: 'btn-success', onClick: addProduct },
+                    ], '产品管理');
+                })
+
+
+                break;
+            case 'orders':
+                get_type_ajax('orders','search',{page:1},function (order_data) {
+                    populateTable(order_data['result'], ['Order_ID',"Order_Name", 'Order_date', 'Total_price', 'Is_completed'], [
+                        { label: 'Edit', class: 'btn-warning', onClick: editOrder },
+                        { label: 'Delete', class: 'btn-danger', onClick: deleteOrder },
+                        { label: 'Add', class: 'btn-success', onClick: addOrder},
+                    ], '订单管理');
+                })
+
+                break;
+            case 'tasks':
+               get_type_ajax('manager_order','search',{page:1},function (tasksData) {
+
+                    populateTable(tasksData['result'], ['ID','Order_Name', 'Name', 'Product_Name','Quantity',"Is_completed"], [
+                        { label: 'Edit', class: 'btn-warning', onClick: editTask },
+                        { label: 'Delete', class: 'btn-danger', onClick: deleteTask },
+                        { label: 'Add', class: 'btn-success', onClick: addTask },
+                    ], '任务管理');
+                })
+
+
+                break;
+            default:
+                document.getElementById('mainContent').innerHTML = '<h2>' + page + ' Content Loaded</h2>';
+        }
+    }
+
+    $('#loginInfo').hover(
+        function () {
+            $(this).append('<button class="btn btn-danger btn-sm" onclick="logout()">退出</button>');
+        },
+        function () {
+            $(this).find('button').remove();
+        }
+    );
+
+    function logout() {
+        document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        window.location.href = "login";
+    }
+
+
+    var update_id={}
+
+    $(document).on('click', '#add_button', function () {
+        datafrom=generateJsonFromForm("add");
+        document.getElementById("form_content").style.display="none";
+    });
+
+    $(document).on('click', '#update_button', function () {
+        generateJsonFromForm("update",update_id);
+        document.getElementById("form_content").style.display="none";
+
+    });
+    var title=''
+    var rowData = {};
+
+
+    function editUser(userId) {
+        update_id={manager_id:userId}
+        var formFields = [
+            { label: 'name', type: 'text', id: 'name', placeholder: '请输入姓名' },
+            { label: 'phone', type: 'text', id: 'phone', placeholder: '请输入电话' },
+
+        ];
+
+        generateForm('负责人更新', formFields,rowData);
+        title='负责人更新'
+
+    }
+
+    function deleteUser(userId) {
+        console.log(userId)
+        var result = confirm("确认删除该条数据吗");
+        if(result) {
+
+
+        get_type_ajax('managers','delete',{manager_id:userId},
+            function (resp) {
+            loadContent('users')
+        }
+        )
+
+
+    }}
+
+    function editProduct(productId) {
+        var formFields = [
+            {label: 'name', type: 'text', id: 'name', placeholder: '请输入产品名称'},
+            {label: 'price', type: 'number', step: '0.01', id: 'price', placeholder: '请输入价格'},
+            {label: 'quantity', type: 'number', id: 'quantity', placeholder: '请输入数量'},
+        ];
+        update_id={'product_id': productId}
+        generateForm('产品更新', formFields,rowData);
+        title='产品更新'
+
+    }
+
+    function deleteProduct(productId) {
+        console.log(productId)
+        var result = confirm("确认删除该条数据吗");
+        if(result) {
+
+
+        get_type_ajax('products', 'delete',{'product_id': productId},
+            function (resp) {
+            alert("删除成功")
+            loadContent('products')
+
+        })
+    }}
+    function editOrder( orderId) {
+        update_id={'order_id': orderId}
+        var formFields = [
+            { label: 'order_name', type: 'text', id: 'order_name', placeholder: '请输入订单名称' },
+            { label: 'order_date', type: 'date', id: 'order_date', placeholder: '请输入开始日期' },
+            { label: 'is_completed', type: 'select', id: 'is_completed',  placeholder: '交易是否成功请选择', options: [true,false] },
+
+        ];
+        title='订单更新'
+        generateForm('订单更新', formFields,rowData);
+
+    }
+
+    function deleteOrder(orderId) {
+        console.log(orderId);
+        var result = confirm("确认删除该条数据吗");
+        if(result) {
+            get_type_ajax('orders', 'delete',  {'order_id': orderId},
+                function (resp) {
+                alert("删除成功")
+               loadContent("orders")
+
+            })
+        }
+    }
+
+    function editTask(taskid) {
+        update_id={'id': taskid}
+        var formFields = [
+            { label: 'order_name', type: 'text', id: 'order_name', placeholder: '请输入订单名称' },
+            { label: 'User_Name', type: 'text', id: 'user_name', placeholder: '请输入负责人名称' },
+            { label: 'product_Name', type: 'text', id: 'product_name', placeholder: '请输入产品名称' },
+            { label: 'product_number', type: 'number', id: 'quantity', placeholder: '请输入所需产品数量' },
+            { label: 'is_completed', type: 'select', id: 'is_completed',  placeholder: '任务是否完成请选择', options: [true,false] },
+
+        ];
+
+        generateForm('任务更新', formFields,rowData);
+        title='任务更新';
+
+    }
+
+    function deleteTask(taskId) {
+        var result = confirm("确认删除该条数据吗");
+        if(result) {
+
+            get_type_ajax('manager_order', 'delete', {'id': taskId},
+                function (resp) {
+                console.log(resp)
+                alert("删除成功")
+                loadContent('tasks')
+
+            })
+        }
+    }
+
+    function addUser() {
+        var formFields = [
+            { label: 'name', type: 'text', id: 'name', placeholder: '请输入姓名' },
+            { label: 'phone', type: 'text', id: 'phone', placeholder: '请输入电话' },
+        ];
+        title='负责人添加'
+        generateForm('负责人添加', formFields);
+
+
+    }
+
+    function addProduct() {
+
+        var formFields = [
+            {label: 'name', type: 'text', id: 'product_name', placeholder: '请输入产品名称'},
+            {label: 'price', type: 'number', step: '0.01', id: 'price', placeholder: '请输入价格'},
+            {label: 'quantity', type: 'number', id: 'quantity', placeholder: '请输入数量'},
+        ];
+        title='产品添加';
+        generateForm('产品添加', formFields);
+        console.log('Product added successfully.');
+    }
+
+    function addOrder() {
+
+        var formFields = [
+            { label: 'order_name', type: 'text', id: 'order_name', placeholder: '请输入订单名称' },
+            { label: 'order_date', type: 'date', id: 'order_date', placeholder: '请输入开始日期' },
+
+
+        ];
+        title='订单添加'
+        generateForm('订单添加', formFields);
+        console.log('Order added successfully.');
+
+    }
+
+    function addTask() {
+
+
+        var formFields = [
+            { label: 'order_name', type: 'text', id: 'order_name', placeholder: '请输入订单名称' },
+            { label: 'User_Name', type: 'text', id: 'name', placeholder: '请输入负责人名称' },
+            { label: 'product_Name', type: 'text', id: 'product_name', placeholder: '请输入产品名称' },
+            { label: 'product_number', type: 'number', id: 'quantity', placeholder: '请输入所需产品数量' },
+            { label: 'is_completed', type: 'select', id: 'is_completed',  placeholder: '任务是否完成请选择', options: [true,false] },
+
+        ];
+        title='任务分发'
+        generateForm('任务分发', formFields);
+        console.log('Task added successfully.');
+        // loadContent('tasks');
+    }
+
+
+    function generateForm(title, fields, values) {
+        document.getElementById('form_content').style.display = 'block';
+        document.getElementById('formTitle').innerText = title;
+        document.getElementById('closeButton').style.display = 'block';
+
+        var form = document.getElementById('dynamicForm');
+        form.innerHTML = '';
+
+        fields.forEach(function (field) {
+            var div = document.createElement('div');
+            div.classList.add('form-group', 'col-md-6');
+
+            var label = document.createElement('label');
+            label.setAttribute('for', field.id);
+            label.innerText = field.label;
+
+            var input;
+            if (field.type === 'select') {
+                input = document.createElement('select');
+                input.classList.add('form-control', 'rounded');
+                input.setAttribute('id', field.id);
+
+                field.options.forEach(function (option) {
+                    var optionElement = document.createElement('option');
+                    optionElement.innerText = option;
+                    input.appendChild(optionElement);
+                });
+
+                if (values && values[field.id]) {
+                    input.value = values[field.id];
+                }
+
+            } else {
+                input = document.createElement('input');
+                input.setAttribute('type', field.type);
+                input.classList.add('form-control', 'rounded');
+                input.setAttribute('id', field.id);
+                input.setAttribute('placeholder', field.placeholder);
+
+                if (values && values[field.id]) {
+                    input.value = values[field.id];
+                }
+            }
+
+            input.setAttribute('required', '');
+            div.appendChild(label);
+            div.appendChild(input);
+            form.appendChild(div);
+        });
+
+        var submitButton = document.createElement('button');
+        submitButton.setAttribute('type', 'button');
+        if(!values){
+        submitButton.setAttribute('id', 'add_button')
+        }
+        else {
+            submitButton.setAttribute('id', 'update_button')
+        }
+        submitButton.classList.add('btn', 'btn-primary', 'rounded-pill', 'px-4', 'py-2');
+        submitButton.innerText = '保存';
+
+        form.appendChild(submitButton);
+    }
+
+    function generateJsonFromForm(type,updata) {
+
+        console.log(title)
+        console.log(updata)
+        if(updata){
+        var formData = updata}
+        else {
+            var formData={}
+        };
+        $('#dynamicForm input, #dynamicForm select').each(function () {
+            var key=this.id;
+            var value=$(this).val();
+
+            formData[key] = value
+        });
+
+
+        switch (title) {
+            case "负责人添加" :
+                title="managers"
+                break
+            case "负责人更新":
+                title="managers"
+                break
+            case  "产品更新":
+                title='products'
+                break
+            case "产品添加" :
+                title='products'
+                break
+            case  "订单更新":
+                title="orders"
+                break
+            case "订单添加":
+                title="orders"
+                break
+            case "任务分发":
+                title="manager_order"
+            case "任务更新":
+                title="manager_order"
+        }
+        console.log(title)
+
+        get_type_ajax(title,type,formData,function () {
+            if(type=="add"){
+                    alert("添加成功")}
+            else {
+                alert("更新成功")
+            }
+
+        })
+
+
+        return formData;
+    }
+
+    document.getElementById('closeButton').addEventListener('click', function () {
+
+        document.getElementById('form_content').style.display = 'none';
+    });
+
+
+    function get_type_ajax(name,type,data, callback) {
+
+        formdata={
+            sheetname:name,
+            type:type,
+            datas:JSON.stringify(data)
+        }
+        console.log(formdata)
+
+        $.ajax(
+            {
+                url:'api',
+                type:"post",
+                data:formdata,
+                success:function (data) {
+                    console.log(data)
+                    console.log("1212")
+                    console.log(type)
+                    console.log(data)
+                    if(type!=="search"){
+                        window.alert(data['responseText']);
+                    }
+                    callback(data)
+
+
+                },
+                error:function(error) {
+                    window.alert(error['responseText']);
+
+                }
+
+            }
+        )
+
+
+    }
+
+
+    function load_dashboard(){
+
+        $.ajax(
+            {
+                url:'count',
+                type:"post",
+                success:function (data) {
+                  data=data['map']
+                    document.getElementById('form_content').style.display = 'none';
+                    document.getElementById('tableContainer').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    update_dashboard(data)
+                    console.log(data)
+                },
+                error:function(error) {
+                    console.log(error)
+
+                }
+
+            }
+        )
+    }
+
+    function update_dashboard(data) {
+        var ordersData = {
+            labels: ['已完成', '未完成'],
+            datasets: [{
+                data: [data['completedOrdersCount'], data['incompleteOrdersCount']],
+                backgroundColor: ['#CCFFFF', '#FFCCCC'],
+            }]
+        };
+
+        var tasksData = {
+            labels: ['已完成', '未完成'],
+            datasets: [{
+                data: [data['completedManagerOrderCount'], data['completedManagerOrderCount']],
+                backgroundColor: ['#003366', '#99CCFF'],
+            }]
+        };
+
+
+        new Chart(document.getElementById('ordersChart').getContext('2d'), {
+            type: 'doughnut',
+            data: ordersData,
+        });
+
+        new Chart(document.getElementById('tasksChart').getContext('2d'), {
+            type: 'doughnut',
+            data: tasksData,
+        });
+
+
+        document.getElementById('completedOrdersCount').innerText = ordersData.datasets[0].data[0];
+        document.getElementById('incompleteOrdersCount').innerText = ordersData.datasets[0].data[1];
+
+        document.getElementById('completedTasksCount').innerText = tasksData.datasets[0].data[0];
+        document.getElementById('incompleteTasksCount').innerText = tasksData.datasets[0].data[1];
+        document.getElementById("user_count").innerText=data['managersCount']
+        document.getElementById("product_count").innerText=data['productsCount']
+
+
+    }
+
+
+
+</script>
+
+</body>
+</html>

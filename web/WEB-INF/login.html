@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Beautiful Login Form</title>
+    <style>
+        #show_msg_table{
+            position: absolute;
+            top: 11%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #e2e2e2;
+            padding: 5px;
+            display: none;
+            border: 1px solid #ccc;
+            width: 400px;
+            opacity: 0.7;
+
+            text-align: center;
+            font-size: 20px;
+            color: blue;
+
+        }
+
+        #container{
+            position: absolute;
+            top: 11%;
+            width: 60%;
+            left: 20%;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href="#">订单管理系统</a>
+    <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+            <a class="nav-link" href="#" id="loginInfo">登录信息</a>
+        </li>
+    </ul>
+</nav>
+<div id="show_msg_table">
+    heelo
+</div>
+
+
+<div class="container mt-5" id="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">登录</h3>
+                </div>
+                <div class="card-body">
+                    <form action="login.php" method="post">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="button" id="login_button" class="btn btn-primary btn-block">Login</button>
+                     </form>
+                </div>
+                <div class="container mt-3">
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <p id="redirect_info">还没有账号？<a href="#" id="register_redirect" class="alert-link">点击这里注册</a></p>
+
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+</div>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+
+    function get_login_from() {
+        password=document.getElementById('password').value;
+
+            formdata={
+                username:document.getElementById('username').value,
+                password:password};
+
+            $.ajax({
+                    url:"login",
+                    method:"POST",
+                    data:formdata,
+                    success:function (response) {
+                        $("#show_msg_table").css("display","block")
+                        $("#show_msg_table").text(response);
+                        $("#show_msg_table").show()
+                        if(response==="登录成功"){
+                            window.location.href = "admin"
+                        }
+                    },
+                    error:function (error) {
+                        alert(error)
+                    }
+                }
+            )
+
+
+
+
+    }
+
+    $("#login_button").on('click',function () {
+        get_login_from()
+    });
+    $("#show_msg_table").on("click",function () {
+        $("#show_msg_table").hide();
+    })
+    $("#register_redirect").on("click", function () {
+        window.location.href = "register"; // 更改为你的实际注册页面
+    });
+
+</script>
+
+
+</body>
+</html>
